@@ -7,12 +7,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
 import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
@@ -20,6 +22,7 @@ import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
+import javax.sql.DataSource;
 import java.util.Arrays;
 
 /**
@@ -35,6 +38,8 @@ public class Authorization extends AuthorizationServerConfigurerAdapter {
     @Autowired
     private JwtAccessTokenConverter jwtAccessTokenConverter;
 
+
+
     //  令牌访问安全策略
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
@@ -44,19 +49,32 @@ public class Authorization extends AuthorizationServerConfigurerAdapter {
                 .allowFormAuthenticationForClients();      //   允许表单提交
     }
 
+    //  将客户端信息从数据库中来
+    @Bean
+    public ClientDetailsService clientDetailsService(DataSource dataSource) {
+        ClientDetailsService clientDetailsService = new JdbcClientDetailsService(dataSource);
+        ((JdbcClientDetailsService) clientDetailsService).setPasswordEncoder(passwordEncoder);
+        return clientDetailsService;
+    }
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         super.configure(clients);
         //  使用内存的方式
-        clients.inMemory()          //  使用内存的方式
-                .withClient("phone")       //  客户端id
-                .secret(new BCryptPasswordEncoder().encode("secret"))               //  客户端密钥
-                .resourceIds("res1")             //  资源列表
-                .authorizedGrantTypes("authorization_code", "password","client_credentials","implicit","refresh_token")// 该client允许的授权类型authorization_code,password,refresh_token,implicit,client_credentials
-                .scopes("all")                  //  授权允许范围
-                .autoApprove(false)             //  false 跳转到授权页面   true 直接发令牌
-                .redirectUris("http://www.baidu.com");               //验证回调地址
+//        clients.inMemory()          //  使用内存的方式
+//                .withClient("phone")       //  客户端id
+//                .secret(new BCryptPasswordEncoder().encode("secret"))               //  客户端密钥
+//                .resourceIds("res1")             //  资源列表
+//                .authorizedGrantTypes("authorization_code", "password","client_credentials","implicit","refresh_token")// 该client允许的授权类型authorization_code,password,refresh_token,implicit,client_credentials
+//                .scopes("all")                  //  授权允许范围
+//                .autoApprove(false)             //  false 跳转到授权页面   true 直接发令牌
+//                .redirectUris("http://www.baidu.com");               //验证回调地址
+
+        //  使用数据库的方式
+        clients.withClientDetails(clientDetailsService);
     }
 
     @Autowired

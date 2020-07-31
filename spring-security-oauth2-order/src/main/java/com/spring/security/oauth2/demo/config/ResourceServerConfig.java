@@ -36,7 +36,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
     public void configure(HttpSecurity http) throws Exception {
         super.configure(http);
         http.authorizeRequests().antMatchers("/**")
-                .access("#oauth2.hasAnyScope('all')")                                   //  这个scope是授权服务器得授的授权范围
+                .access("#oauth2.hasAnyScope('ROLE_API')")                                   //  这个scope是授权服务器得授的授权范围
                 .and().csrf().disable()                                                          //  禁用csrf
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);    //  无状态
     }

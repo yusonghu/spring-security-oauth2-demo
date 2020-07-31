@@ -13,8 +13,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.code.InMemoryAuthorizationCodeServices;
+import org.springframework.security.oauth2.provider.code.JdbcAuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.code.RandomValueAuthorizationCodeServices;
 
+import javax.sql.DataSource;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -34,11 +36,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
+//    @Bean
+//    public AuthorizationCodeServices authorizationCodeServices() {
+//        //  基于内存的授权码
+//        return new InMemoryAuthorizationCodeServices();
+//    }
+
     @Bean
-    public AuthorizationCodeServices authorizationCodeServices() {
-        //  基于内存的授权码
-        return new InMemoryAuthorizationCodeServices();
+    public AuthorizationCodeServices authorizationCodeServices(DataSource dataSource){
+        //  设置授权码模式的授权码如何存取
+        return new JdbcAuthorizationCodeServices(dataSource);
     }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()     // 对请求进行验证
@@ -53,4 +62,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         //  配置session
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
     }
+
+
 }
