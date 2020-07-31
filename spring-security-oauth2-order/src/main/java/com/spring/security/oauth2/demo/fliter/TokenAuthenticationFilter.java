@@ -30,9 +30,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             //  将token转成json对象
             JSONObject jsonObject = JSON.parseObject(tokenJSON);
             //  用户身份信息
-            UserDTO userDTO = new UserDTO();
             String principal = jsonObject.getString("principal");
-            userDTO.setUsername(principal);
+            UserDTO userDTO = JSON.parseObject(principal, UserDTO.class);
             //  用户权限
             JSONArray jsonArray = jsonObject.getJSONArray("authorities");
             String[] authorities = jsonArray.toArray(new String[jsonArray.size()]);
